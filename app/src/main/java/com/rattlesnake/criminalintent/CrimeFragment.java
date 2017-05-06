@@ -15,18 +15,28 @@ import android.widget.EditText;
 import java.util.UUID;
 
 public class CrimeFragment extends Fragment {
+    private static String ARG_CRIME_ID = "crime_id";
+
     private Crime mCrime;
     private Button mDateButton;
     private CheckBox mSolvedCheckBox;
     private EditText mTitleField;
+
+    public static CrimeFragment newInstance(UUID crimeId){
+        Bundle argsBundle = new Bundle();
+        argsBundle.putSerializable(ARG_CRIME_ID, crimeId);
+
+        CrimeFragment cf = new CrimeFragment();
+        cf.setArguments(argsBundle);
+        return cf;
+    }
 
     public CrimeFragment() {}
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        UUID crimeId = (UUID) getActivity().getIntent()
-                .getSerializableExtra(CrimeActivity.CRIME_ID_EXTRA);
+        UUID crimeId = (UUID) getArguments().getSerializable(ARG_CRIME_ID);
         mCrime = CrimeLab.get(getActivity()).getCrime(crimeId);
     }
 

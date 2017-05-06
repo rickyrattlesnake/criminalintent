@@ -7,11 +7,12 @@ import android.support.v4.app.Fragment;
 import java.util.UUID;
 
 public class CrimeActivity extends SingleFragmentActivity {
-    public static final String CRIME_ID_EXTRA = "com.rattlesnake.criminalintent.crime_uid";
+    private static final String CRIME_ID_EXTRA = "com.rattlesnake.criminalintent.crime_uid";
 
     @Override
     protected Fragment createFragment(){
-        return new CrimeFragment();
+        UUID crimeId = (UUID) getIntent().getSerializableExtra(CRIME_ID_EXTRA);
+        return CrimeFragment.newInstance(crimeId);
     }
 
     public static Intent createIntent(Context context, UUID crimeId){

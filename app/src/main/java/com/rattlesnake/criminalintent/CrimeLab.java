@@ -20,7 +20,7 @@ public class CrimeLab {
 
     private CrimeLab(Context context){
         mCrimes = new ArrayList<>();
-        for (int i = 0; i < 1; i++){
+        for (int i = 0; i < 100; i++){
             mCrimes.add(
                 new Crime()
                     .setTitle("Crime #" + i)
@@ -35,7 +35,7 @@ public class CrimeLab {
 
     public Crime getCrime(UUID id) {
         for (Crime c : mCrimes){
-            if (c.getId() == id){
+            if (c.getId().equals(id)){
                 return c;
             }
         }
