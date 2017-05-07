@@ -1,5 +1,7 @@
 package com.rattlesnake.criminalintent;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
@@ -16,11 +18,14 @@ import java.util.UUID;
 
 public class CrimeFragment extends Fragment {
     private static String ARG_CRIME_ID = "crime_id";
+    private static String EXTRA_CRIME_CHANGED = "com.rattlesnake.criminalintent.crime_changed";
+    private static String EXTRA_CRIME_ID = "com.rattlesnake.criminalintent.crime_id";
 
     private Crime mCrime;
     private Button mDateButton;
     private CheckBox mSolvedCheckBox;
     private EditText mTitleField;
+    private boolean mCrimeChanged;
 
     public static CrimeFragment newInstance(UUID crimeId){
         Bundle argsBundle = new Bundle();
@@ -38,6 +43,7 @@ public class CrimeFragment extends Fragment {
         super.onCreate(savedInstanceState);
         UUID crimeId = (UUID) getArguments().getSerializable(ARG_CRIME_ID);
         mCrime = CrimeLab.get(getActivity()).getCrime(crimeId);
+        mCrimeChanged = false;
     }
 
     @Override
@@ -51,6 +57,22 @@ public class CrimeFragment extends Fragment {
         return v;
     }
 
+    public static boolean hasCrimeChanged(Intent data){
+        return data.getBooleanExtra(EXTRA_CRIME_CHANGED, false);
+    }
+
+    public static UUID getCrimeId(Intent data){
+        return (UUID) data.getSerializableExtra(EXTRA_CRIME_ID);
+    }
+
+    private void registerChange(){
+        mCrimeChanged = true;
+        Intent data = new Intent()
+                .putExtra(EXTRA_CRIME_CHANGED, mCrimeChanged)
+                .putExtra(EXTRA_CRIME_ID, mCrime.getId());
+        getActivity().setResult(Activity.RESULT_OK, data);
+    }
+
     private void configureWidgets() {
         mTitleField.setText(mCrime.getTitle());
         mTitleField.addTextChangedListener(new TextWatcher() {
@@ -60,10 +82,13 @@ public class CrimeFragment extends Fragment {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 mCrime.setTitle(s.toString());
+                registerChange();
             }
 
             @Override
-            public void afterTextChanged(Editable s) {}
+            public void afterTextChanged(Editable s) {
+
+            }
         });
         mDateButton.setText(mCrime.getFormattedDate());
         mDateButton.setEnabled(false);
@@ -73,6 +98,7 @@ public class CrimeFragment extends Fragment {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 mCrime.setSolved(isChecked);
+                registerChange();
             }
         });
     }
