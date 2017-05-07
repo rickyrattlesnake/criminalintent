@@ -13,6 +13,7 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public class CrimeListFragment extends Fragment {
@@ -40,11 +41,13 @@ public class CrimeListFragment extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == CRIME_REQUEST_CODE
-            && resultCode == Activity.RESULT_OK
-            && CrimeFragment.hasCrimeChanged(data)) {
-                UUID changedCrimeId = CrimeFragment.getCrimeId(data);
-                mAdapter.notifyCrimeChanged(changedCrimeId);
+        if (requestCode == CRIME_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            Set<UUID> changedCrimeIds = CrimePagerActivity.getChangedCrimes(data);
+            if (changedCrimeIds != null && !changedCrimeIds.isEmpty()) {
+                for (UUID crimeId : changedCrimeIds){
+                    mAdapter.notifyCrimeChanged(crimeId);
+                }
+            }
         }
     }
 
@@ -65,7 +68,7 @@ public class CrimeListFragment extends Fragment {
         private CheckBox mSolvedCheckBox;
         private Crime mCrime;
 
-        public CrimeHolder(View itemView){
+        CrimeHolder(View itemView){
             super(itemView);
 
             mTitleTextView = (TextView) itemView
@@ -78,7 +81,7 @@ public class CrimeListFragment extends Fragment {
             itemView.setOnClickListener(this);
         }
 
-        public void bindCrime(Crime crime){
+        void bindCrime(Crime crime){
             mCrime = crime;
             mTitleTextView.setText(mCrime.getTitle());
             mDateTextView.setText(mCrime.getFormattedDate());
@@ -96,7 +99,7 @@ public class CrimeListFragment extends Fragment {
     private class CrimeAdapter extends RecyclerView.Adapter<CrimeHolder> {
         private List<Crime> mCrimes;
 
-        public CrimeAdapter(List<Crime> crimes){
+        CrimeAdapter(List<Crime> crimes){
             mCrimes = crimes;
         }
 
@@ -119,7 +122,7 @@ public class CrimeListFragment extends Fragment {
             return mCrimes.size();
         }
 
-        public void notifyCrimeChanged(UUID crimeId){
+        void notifyCrimeChanged(UUID crimeId){
             for (int i = 0; i < mCrimes.size(); i++){
                 Crime c = mCrimes.get(i);
                 if (c.getId().equals(crimeId)){

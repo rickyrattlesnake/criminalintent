@@ -1,7 +1,6 @@
 package com.rattlesnake.criminalintent;
 
-import android.app.Activity;
-import android.content.Intent;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
@@ -18,16 +17,17 @@ import java.util.UUID;
 
 public class CrimeFragment extends Fragment {
     private static String ARG_CRIME_ID = "crime_id";
-    private static String EXTRA_CRIME_CHANGED = "com.rattlesnake.criminalintent.crime_changed";
-    private static String EXTRA_CRIME_ID = "com.rattlesnake.criminalintent.crime_id";
 
     private Crime mCrime;
     private Button mDateButton;
     private CheckBox mSolvedCheckBox;
     private EditText mTitleField;
-    private boolean mCrimeChanged;
+    private OnCrimeChangedListener mCrimeChangedCallback;
 
-    public static CrimeFragment newInstance(UUID crimeId){
+    public CrimeFragment() {
+    }
+
+    public static CrimeFragment newInstance(UUID crimeId) {
         Bundle argsBundle = new Bundle();
         argsBundle.putSerializable(ARG_CRIME_ID, crimeId);
 
@@ -36,18 +36,26 @@ public class CrimeFragment extends Fragment {
         return cf;
     }
 
-    public CrimeFragment() {}
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        try {
+            mCrimeChangedCallback = (OnCrimeChangedListener) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.toString() + "must implement OnCrimeChangedListener");
+        }
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         UUID crimeId = (UUID) getArguments().getSerializable(ARG_CRIME_ID);
         mCrime = CrimeLab.get(getActivity()).getCrime(crimeId);
-        mCrimeChanged = false;
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedState){
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedState) {
         View v = inflater.inflate(R.layout.fragment_crime, container, false);
 
         mTitleField = (EditText) v.findViewById(R.id.crime_title);
@@ -57,28 +65,16 @@ public class CrimeFragment extends Fragment {
         return v;
     }
 
-    public static boolean hasCrimeChanged(Intent data){
-        return data.getBooleanExtra(EXTRA_CRIME_CHANGED, false);
-    }
-
-    public static UUID getCrimeId(Intent data){
-        return (UUID) data.getSerializableExtra(EXTRA_CRIME_ID);
-    }
-
-    private void registerChange(){
-        //TODO: bug here with ViewPager
-        mCrimeChanged = true;
-        Intent data = new Intent()
-                .putExtra(EXTRA_CRIME_CHANGED, mCrimeChanged)
-                .putExtra(EXTRA_CRIME_ID, mCrime.getId());
-        getActivity().setResult(Activity.RESULT_OK, data);
+    private void registerChange() {
+        mCrimeChangedCallback.onCrimeChanged(mCrime.getId());
     }
 
     private void configureWidgets() {
         mTitleField.setText(mCrime.getTitle());
         mTitleField.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -102,5 +98,9 @@ public class CrimeFragment extends Fragment {
                 registerChange();
             }
         });
+    }
+
+    interface OnCrimeChangedListener {
+        void onCrimeChanged(UUID crimeId);
     }
 }
