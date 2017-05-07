@@ -21,7 +21,6 @@ public abstract class SingleFragmentActivity extends FragmentActivity {
             fm.beginTransaction()
                 .add(R.id.fragment_container, fragment)
                 .commit();
-
         }
     }
 }

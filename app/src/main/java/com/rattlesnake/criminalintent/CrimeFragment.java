@@ -66,6 +66,7 @@ public class CrimeFragment extends Fragment {
     }
 
     private void registerChange(){
+        //TODO: bug here with ViewPager
         mCrimeChanged = true;
         Intent data = new Intent()
                 .putExtra(EXTRA_CRIME_CHANGED, mCrimeChanged)

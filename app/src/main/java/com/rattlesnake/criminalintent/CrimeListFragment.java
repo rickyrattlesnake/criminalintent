@@ -88,8 +88,8 @@ public class CrimeListFragment extends Fragment {
 
         @Override
         public void onClick(View v){
-            startActivityForResult(CrimeActivity.createIntent(getActivity(), mCrime.getId()),
-                                   CRIME_REQUEST_CODE);
+            Intent i = CrimePagerActivity.newIntent(getActivity(), mCrime.getId());
+            startActivityForResult(i, CRIME_REQUEST_CODE);
         }
     }
 
