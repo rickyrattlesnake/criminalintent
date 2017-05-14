@@ -43,8 +43,14 @@ public class Crime {
 
     public String getFormattedDate(){
         String pattern = "EEE, d MMM yyyy";
-        CharSequence formattedDate = DateFormat.format(pattern.toString(), mDate);
+        CharSequence formattedDate = DateFormat.format(pattern, mDate);
         return formattedDate.toString();
+    }
+
+    public String getFormattedTime() {
+        String pattern = "hh:mm a";
+        CharSequence formattedTime = DateFormat.format(pattern, mDate);
+        return formattedTime.toString();
     }
 
     public Crime setDate(Date date) {
