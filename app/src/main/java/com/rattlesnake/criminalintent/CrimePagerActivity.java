@@ -8,6 +8,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AppCompatActivity;
 
 import java.io.Serializable;
 import java.util.HashSet;
@@ -15,7 +16,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-public class CrimePagerActivity extends FragmentActivity implements CrimeFragment.OnCrimeChangedListener {
+public class CrimePagerActivity extends AppCompatActivity implements CrimeFragment.OnCrimeChangedListener {
     private static final String EXTRA_CRIME_ID = "com.rattlesnake.criminalintent.crime_uid";
     private static final String EXTRA_CHANGED_CRIMES = "changed_crimes";
     private List<Crime> mCrimes;
