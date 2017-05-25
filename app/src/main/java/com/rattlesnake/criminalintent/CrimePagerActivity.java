@@ -16,12 +16,16 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-public class CrimePagerActivity extends AppCompatActivity implements CrimeFragment.OnCrimeChangedListener {
+public class CrimePagerActivity
+        extends AppCompatActivity
+        implements CrimeFragment.OnCrimeChangedListener {
     private static final String EXTRA_CRIME_ID = "com.rattlesnake.criminalintent.crime_uid";
     private static final String EXTRA_CHANGED_CRIMES = "changed_crimes";
+    private static final String EXTRA_REMOVED_CRIMES = "removed_crimes";
     private List<Crime> mCrimes;
     private ViewPager mViewPager;
     private Set<UUID> mChangedCrimes;
+    private Set<UUID> mRemovedCrimes;
 
     public static Intent newIntent(Context context, UUID crimeId) {
         Intent i = new Intent(context, CrimePagerActivity.class);
@@ -35,6 +39,12 @@ public class CrimePagerActivity extends AppCompatActivity implements CrimeFragme
         return changedCrimes;
     }
 
+    public static Set<UUID> getRemovedCrimes(Intent data){
+        @SuppressWarnings("unchecked")
+        Set<UUID> removedCrimes = (Set<UUID>) data.getSerializableExtra(EXTRA_REMOVED_CRIMES);
+        return removedCrimes;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,6 +54,7 @@ public class CrimePagerActivity extends AppCompatActivity implements CrimeFragme
         UUID selectedCrimeId = (UUID) getIntent().getSerializableExtra(EXTRA_CRIME_ID);
         mCrimes = CrimeLab.get(this).getCrimes();
         mChangedCrimes = new HashSet<>();
+        mRemovedCrimes = new HashSet<>();
         mViewPager = (ViewPager) findViewById(R.id.activity_crime_pager_view_pager);
         FragmentManager fm = getSupportFragmentManager();
         mViewPager.setAdapter(new FragmentStatePagerAdapter(fm) {
@@ -72,13 +83,18 @@ public class CrimePagerActivity extends AppCompatActivity implements CrimeFragme
     }
 
     @Override
-    public void onBackPressed() {
-        if (!mChangedCrimes.isEmpty()) {
-            Intent data = new Intent();
-            data.putExtra(EXTRA_CHANGED_CRIMES, (Serializable) mChangedCrimes);
-            setResult(RESULT_OK, data);
-        }
+    public void onCrimeRemoved(UUID crimeId) { mRemovedCrimes.add(crimeId); }
 
+    @Override
+    public void onBackPressed() {
+        Intent data = new Intent();
+        if (!mChangedCrimes.isEmpty()) {
+            data.putExtra(EXTRA_CHANGED_CRIMES, (Serializable) mChangedCrimes);
+        }
+        if (!mRemovedCrimes.isEmpty()){
+            data.putExtra(EXTRA_REMOVED_CRIMES, (Serializable) mRemovedCrimes);
+        }
+        setResult(RESULT_OK, data);
         super.onBackPressed();
     }
 }

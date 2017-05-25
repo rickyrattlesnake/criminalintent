@@ -66,11 +66,20 @@ public class CrimeListFragment extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == CRIME_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+        if (resultCode != Activity.RESULT_OK){
+            return;
+        }
+        if (requestCode == CRIME_REQUEST_CODE) {
             Set<UUID> changedCrimeIds = CrimePagerActivity.getChangedCrimes(data);
-            if (changedCrimeIds != null && !changedCrimeIds.isEmpty()) {
+            Set<UUID> removedCrimeIds = CrimePagerActivity.getRemovedCrimes(data);
+            if (changedCrimeIds != null) {
                 for (UUID crimeId : changedCrimeIds){
                     mAdapter.notifyCrimeChanged(crimeId);
+                }
+            }
+            if (removedCrimeIds != null){
+                for (UUID crimeId : removedCrimeIds){
+                    mAdapter.notifyCrimeRemoved(crimeId);
                 }
             }
         }
@@ -189,12 +198,24 @@ public class CrimeListFragment extends Fragment {
         }
 
         void notifyCrimeChanged(UUID crimeId){
+            int position = findCrimePosition(crimeId);
+            if (position != -1){
+                notifyItemChanged(position);
+            }
+        }
+
+        void notifyCrimeRemoved(UUID crimeId){
+            notifyDataSetChanged();
+        }
+
+        private int findCrimePosition(UUID crimeId){
             for (int i = 0; i < mCrimes.size(); i++){
                 Crime c = mCrimes.get(i);
                 if (c.getId().equals(crimeId)){
-                    notifyItemChanged(i);
+                    return i;
                 }
             }
+            return -1;
         }
     }
 }
