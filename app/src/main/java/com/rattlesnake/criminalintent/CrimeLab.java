@@ -7,10 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.rattlesnake.criminalintent.database.CrimeBaseHelper;
 import com.rattlesnake.criminalintent.database.CrimeCursorWrapper;
-import com.rattlesnake.criminalintent.database.CrimeDbSchema;
 import com.rattlesnake.criminalintent.database.CrimeDbSchema.CrimeTable;
-
-import java.sql.SQLData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -68,16 +65,12 @@ public class CrimeLab {
     public List<Crime> getCrimes() {
         List<Crime> crimes = new ArrayList<>();
 
-        CrimeCursorWrapper cursor = queryCrimes(null, null);
-
-        try {
+        try (CrimeCursorWrapper cursor = queryCrimes(null, null)) {
             cursor.moveToFirst();
             while (!cursor.isAfterLast()) {
                 crimes.add(cursor.getCrime());
                 cursor.moveToNext();
             }
-        } finally {
-            cursor.close();
         }
 
         return crimes;
@@ -87,16 +80,12 @@ public class CrimeLab {
         String whereClause = CrimeTable.Cols.UUID + " = ?";
         String[] whereArgs = new String[] { id.toString() };
 
-        CrimeCursorWrapper cursor = queryCrimes(whereClause, whereArgs);
-
-        try {
+        try (CrimeCursorWrapper cursor = queryCrimes(whereClause, whereArgs)) {
             if (cursor.getCount() == 0) {
                 return null;
             }
             cursor.moveToFirst();
             return cursor.getCrime();
-        } finally {
-            cursor.close();
         }
     }
 }

@@ -90,9 +90,7 @@ public class CrimeListFragment extends Fragment {
                 }
             }
             if (removedCrimeIds != null){
-                for (UUID crimeId : removedCrimeIds){
-                    mAdapter.notifyCrimeRemoved(crimeId);
-                }
+                mAdapter.notifyCrimeRemoved();
             }
         }
     }
@@ -136,8 +134,9 @@ public class CrimeListFragment extends Fragment {
         }
 
         AppCompatActivity activity = (AppCompatActivity) getActivity();
-        activity.getSupportActionBar().setSubtitle(subtitle);
-
+        if (activity.getSupportActionBar() != null) {
+            activity.getSupportActionBar().setSubtitle(subtitle);
+        }
     }
 
     private void updateUI() {
@@ -235,7 +234,7 @@ public class CrimeListFragment extends Fragment {
             }
         }
 
-        void notifyCrimeRemoved(UUID crimeId){
+        void notifyCrimeRemoved(){
             notifyDataSetChanged();
         }
 
