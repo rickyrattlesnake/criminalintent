@@ -3,9 +3,14 @@ package com.rattlesnake.criminalintent;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract.Contacts;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.ShareCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -28,11 +33,14 @@ public class CrimeFragment extends Fragment {
     private static final int REQUEST_DATE = 0;
     private static final String DIALOG_TIME = "DialogTime";
     private static final int REQUEST_TIME = 1;
+    private static final int REQUEST_CONTACT = 2;
 
     private Crime mCrime;
     private Button mDateButton;
     private Button mTimeButton;
     private CheckBox mSolvedCheckBox;
+    private Button mReportButton;
+    private Button mChooseSuspect;
     private EditText mTitleField;
     private OnCrimeChangedListener mCrimeChangedCallback;
 
@@ -83,6 +91,9 @@ public class CrimeFragment extends Fragment {
         mDateButton = (Button) v.findViewById(R.id.crime_date);
         mTimeButton = (Button) v.findViewById(R.id.crime_time);
         mSolvedCheckBox = (CheckBox) v.findViewById(R.id.crime_solved);
+        mReportButton = (Button) v.findViewById(R.id.crime_report);
+        mChooseSuspect = (Button) v.findViewById(R.id.crime_suspect);
+
         configureWidgets();
         return v;
     }
@@ -106,26 +117,42 @@ public class CrimeFragment extends Fragment {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode != Activity.RESULT_OK){
-            return;
+        if (resultCode == Activity.RESULT_OK && data != null){
+            if (requestCode == REQUEST_DATE){
+                Date newDate = DatePickerFragment.getDate(data);
+                mCrime.setDate(newDate);
+            } else if (requestCode == REQUEST_TIME){
+                Date newDate = TimePickerFragment.getTime(data);
+                mCrime.setDate(newDate);
+            } else if (requestCode == REQUEST_CONTACT) {
+                Uri contactUri = data.getData();
+                String[] queryFields = new String[] { Contacts.DISPLAY_NAME };
+                try (Cursor c = getActivity().getContentResolver().query(contactUri,
+                                                                         queryFields,
+                                                                         null,
+                                                                         null,
+                                                                         null)) {
+                    if (c.getCount() == 0) {
+                        return;
+                    }
+                    c.moveToFirst();
+                    mCrime.setSuspect(c.getString(0));
+                    mChooseSuspect.setText(mCrime.getSuspect());
+                }
+            }
         }
 
-        if (requestCode == REQUEST_DATE){
-            Date newDate = DatePickerFragment.getDate(data);
-            mCrime.setDate(newDate);
-        } else if (requestCode == REQUEST_TIME){
-            Date newDate = TimePickerFragment.getTime(data);
-            mCrime.setDate(newDate);
-        } else {
-            return;
-        }
-        updateDatetime();
+        updateWidgetContent();
         registerChange();
     }
 
-    private void updateDatetime(){
+    private void updateWidgetContent(){
         mDateButton.setText(mCrime.getFormattedDate());
         mTimeButton.setText(mCrime.getFormattedTime());
+
+        if (mCrime.getSuspect() != null) {
+            mChooseSuspect.setText(mCrime.getSuspect());
+        }
     }
 
     private void registerChange() {
@@ -150,7 +177,7 @@ public class CrimeFragment extends Fragment {
 
             }
         });
-        updateDatetime();
+
         mDateButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
@@ -160,6 +187,7 @@ public class CrimeFragment extends Fragment {
                 dialog.show(fm, DIALOG_DATE);
             }
         });
+
         mTimeButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
@@ -169,6 +197,32 @@ public class CrimeFragment extends Fragment {
                 dialog.show(fm, DIALOG_TIME);
             }
         });
+
+        final Intent pickContact = new Intent(Intent.ACTION_PICK,
+                                              Contacts.CONTENT_URI);
+        mChooseSuspect.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivityForResult(pickContact, REQUEST_CONTACT);
+            }
+        });
+        PackageManager pm = getActivity().getPackageManager();
+        if (pm.resolveActivity(pickContact, PackageManager.MATCH_DEFAULT_ONLY) == null) {
+            mChooseSuspect.setEnabled(false);
+        }
+
+        mReportButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+            ShareCompat.IntentBuilder.from(getActivity())
+                .setType("text/plain")
+                .setChooserTitle(R.string.send_report)
+                .setText(getCrimeReport())
+                .setSubject(getString(R.string.crime_report_subject))
+                .startChooser();
+            }
+        });
+
         mSolvedCheckBox.setChecked(mCrime.isSolved());
         mSolvedCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -177,6 +231,8 @@ public class CrimeFragment extends Fragment {
                 registerChange();
             }
         });
+
+        updateWidgetContent();
     }
 
     private void removeCrime(){
@@ -184,6 +240,22 @@ public class CrimeFragment extends Fragment {
         CrimeLab.get(getActivity()).removeCrime(mCrime);
         mCrimeChangedCallback.onCrimeRemoved(crimeId);
         getActivity().onBackPressed();
+    }
+
+    private String getCrimeReport() {
+        String solvedString = (mCrime.isSolved()) ? getString(R.string.crime_report_solved) :
+                                getString(R.string.crime_report_unsolved);
+        String datetime = mCrime.getFormattedDate() + mCrime.getFormattedTime();
+        String suspect = mCrime.getSuspect();
+        suspect = (suspect == null) ? getString(R.string.crime_report_no_suspect) :
+                    getString(R.string.crime_report_suspect, suspect);
+
+        return getString(R.string.crime_report,
+                          mCrime.getTitle(),
+                          datetime,
+                          solvedString,
+                          suspect);
+
     }
 
     interface OnCrimeChangedListener {
