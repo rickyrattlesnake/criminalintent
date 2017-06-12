@@ -4,6 +4,7 @@ package com.rattlesnake.criminalintent;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.graphics.Point;
 
 public class PictureUtils {
@@ -31,7 +32,7 @@ public class PictureUtils {
     public static Bitmap getScaledBitmap(String path, int inSampleSize) {
         BitmapFactory.Options opts = new BitmapFactory.Options();
         opts.inSampleSize = inSampleSize;
-        return BitmapFactory.decodeFile(path, opts);
+        return rotateBitmap(BitmapFactory.decodeFile(path, opts));
     }
 
     public static Bitmap getScaledBitmap(String path, Activity activity) {
@@ -39,5 +40,13 @@ public class PictureUtils {
         activity.getWindowManager().getDefaultDisplay()
             .getSize(size);
         return getScaledBitmap(path, size.x, size.y);
+    }
+
+    private static Bitmap rotateBitmap(Bitmap bm) {
+        Matrix matrix = new Matrix();
+
+        matrix.postRotate(90);
+
+        return Bitmap.createBitmap(bm, 0, 0, bm.getWidth(), bm.getHeight(), matrix, true);
     }
 }

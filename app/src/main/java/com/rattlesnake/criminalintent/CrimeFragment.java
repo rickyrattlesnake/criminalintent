@@ -12,6 +12,7 @@ import android.provider.ContactsContract.Contacts;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ShareCompat;
 import android.support.v4.content.FileProvider;
 import android.text.Editable;
@@ -209,8 +210,14 @@ public class CrimeFragment extends Fragment {
             public void onClick(View v) {
                 FragmentManager fm = getFragmentManager();
                 PhotoViewFragment photoViewer = PhotoViewFragment.newInstance(mPhotoFile);
-                photoViewer.setTargetFragment(CrimeFragment.this, REQUEST_PHOTO_VIEW);
-                photoViewer.show(fm, DIALOG_PHOTO_VIEW);
+
+                FragmentTransaction transaction = fm.beginTransaction();
+                transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                transaction.add(android.R.id.content, photoViewer)
+                    .addToBackStack(null).commit();
+
+//                photoViewer.setTargetFragment(CrimeFragment.this, REQUEST_PHOTO_VIEW);
+//                photoViewer.show(fm, DIALOG_PHOTO_VIEW);
             }
         });
 
