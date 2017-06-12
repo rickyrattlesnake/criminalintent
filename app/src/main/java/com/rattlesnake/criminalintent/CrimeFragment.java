@@ -36,11 +36,13 @@ import java.util.UUID;
 public class CrimeFragment extends Fragment {
     private static final String ARG_CRIME_ID = "crime_id";
     private static final String DIALOG_DATE = "DialogDate";
-    private static final int REQUEST_DATE = 0;
     private static final String DIALOG_TIME = "DialogTime";
+    private static final String DIALOG_PHOTO_VIEW = "DialogPhotoView";
+    private static final int REQUEST_DATE = 0;
     private static final int REQUEST_TIME = 1;
     private static final int REQUEST_CONTACT = 2;
     private static final int REQUEST_PHOTO = 3;
+    private static final int REQUEST_PHOTO_VIEW = 4;
 
     private Crime mCrime;
     private File mPhotoFile;
@@ -192,7 +194,6 @@ public class CrimeFragment extends Fragment {
         if (canTakePhoto) {
             String fileProviderAuthority = getContext().getApplicationContext().getPackageName() + ".provider";
             Uri uri = FileProvider.getUriForFile(getContext(), fileProviderAuthority, mPhotoFile);
-//            Uri uri = Uri.fromFile(mPhotoFile);
             takePhoto.putExtra(MediaStore.EXTRA_OUTPUT, uri);
         }
 
@@ -200,6 +201,16 @@ public class CrimeFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 startActivityForResult(takePhoto, REQUEST_PHOTO);
+            }
+        });
+
+        mPhotoView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FragmentManager fm = getFragmentManager();
+                PhotoViewFragment photoViewer = PhotoViewFragment.newInstance(mPhotoFile);
+                photoViewer.setTargetFragment(CrimeFragment.this, REQUEST_PHOTO_VIEW);
+                photoViewer.show(fm, DIALOG_PHOTO_VIEW);
             }
         });
 

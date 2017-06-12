@@ -24,7 +24,12 @@ public class PictureUtils {
                 inSampleSize = Math.round(srcWidth / destWidth);
             }
         }
-        opts = new BitmapFactory.Options();
+
+        return getScaledBitmap(path, inSampleSize);
+    }
+
+    public static Bitmap getScaledBitmap(String path, int inSampleSize) {
+        BitmapFactory.Options opts = new BitmapFactory.Options();
         opts.inSampleSize = inSampleSize;
         return BitmapFactory.decodeFile(path, opts);
     }
