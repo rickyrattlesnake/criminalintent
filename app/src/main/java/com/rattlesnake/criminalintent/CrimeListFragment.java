@@ -1,6 +1,7 @@
 package com.rattlesnake.criminalintent;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -24,12 +25,13 @@ import java.util.Set;
 import java.util.UUID;
 
 public class CrimeListFragment extends Fragment {
+    private static final String SAVED_SUBTITLE_VISIBLE = "subtitle";
+    private static int CRIME_REQUEST_CODE = 1;
     private RecyclerView mCrimeRecyclerView;
     private CrimeAdapter mAdapter;
     private LinearLayout mEmptyLayout;
+    private Callbacks mCallbacks;
     private boolean mSubtitleVisible;
-    private static int CRIME_REQUEST_CODE = 1;
-    private static final String SAVED_SUBTITLE_VISIBLE = "subtitle";
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -60,6 +62,22 @@ public class CrimeListFragment extends Fragment {
 
         updateUI();
         return listView;
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        try {
+            mCallbacks = (Callbacks) context;
+        } catch (ClassCastException c) {
+            throw new ClassCastException(context.toString() + "must implement Callbacks interface.");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallbacks = null;
     }
 
     @Override
@@ -121,8 +139,8 @@ public class CrimeListFragment extends Fragment {
     private void createNewCrime(){
         Crime crime = new Crime();
         CrimeLab.get(getActivity()).addCrime(crime);
-        Intent intent = CrimePagerActivity.newIntent(getActivity(), crime.getId());
-        startActivityForResult(intent, CRIME_REQUEST_CODE);
+        updateUI();
+        mCallbacks.onCrimeSelected(crime);
     }
 
     private void updateSubtitle(){
@@ -139,7 +157,7 @@ public class CrimeListFragment extends Fragment {
         }
     }
 
-    private void updateUI() {
+    public void updateUI() {
         CrimeLab crimeLab = CrimeLab.get(getActivity());
         List<Crime> crimes = crimeLab.getCrimes();
 
@@ -160,6 +178,10 @@ public class CrimeListFragment extends Fragment {
         }
 
         updateSubtitle();
+    }
+
+    public interface Callbacks {
+        void onCrimeSelected(Crime crime);
     }
 
     private class CrimeHolder extends RecyclerView.ViewHolder
@@ -192,8 +214,7 @@ public class CrimeListFragment extends Fragment {
 
         @Override
         public void onClick(View v){
-            Intent i = CrimePagerActivity.newIntent(getActivity(), mCrime.getId());
-            startActivityForResult(i, CRIME_REQUEST_CODE);
+            mCallbacks.onCrimeSelected(mCrime);
         }
     }
 

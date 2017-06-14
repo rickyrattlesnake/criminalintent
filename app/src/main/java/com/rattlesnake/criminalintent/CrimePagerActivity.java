@@ -17,7 +17,7 @@ import java.util.UUID;
 
 public class CrimePagerActivity
         extends AppCompatActivity
-        implements CrimeFragment.OnCrimeChangedListener {
+        implements CrimeFragment.Callbacks {
     private static final String EXTRA_CRIME_ID = "com.rattlesnake.criminalintent.crime_uid";
     private static final String EXTRA_CHANGED_CRIMES = "changed_crimes";
     private static final String EXTRA_REMOVED_CRIMES = "removed_crimes";
@@ -82,7 +82,10 @@ public class CrimePagerActivity
     }
 
     @Override
-    public void onCrimeRemoved(UUID crimeId) { mRemovedCrimes.add(crimeId); }
+    public void onCrimeRemoved(UUID crimeId) {
+        mRemovedCrimes.add(crimeId);
+        onBackPressed();
+    }
 
     @Override
     public void onBackPressed() {

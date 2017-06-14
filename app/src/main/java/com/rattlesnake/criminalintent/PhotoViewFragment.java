@@ -10,6 +10,7 @@ import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.widget.ImageView;
 
@@ -35,7 +36,7 @@ public class PhotoViewFragment extends DialogFragment {
         View v = inflater.inflate(R.layout.dialog_photo, container, false);
         mPhotoFile = (File) getArguments().getSerializable(ARG_IMAGE_FILE);
         mPhotoView = (ImageView) v.findViewById(R.id.dialog_crime_photo);
-        renderPhoto();
+        PictureUtils.attachScaledBitmapToView(mPhotoView, mPhotoFile);
         return v;
     }
 
@@ -45,15 +46,5 @@ public class PhotoViewFragment extends DialogFragment {
         Dialog dialog = super.onCreateDialog(savedInstanceState);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         return dialog;
-    }
-
-    private void renderPhoto() {
-        if (mPhotoFile == null || !mPhotoFile.exists()) {
-            mPhotoView.setImageDrawable(null);
-        } else {
-
-            Bitmap bitmap = PictureUtils.getScaledBitmap(mPhotoFile.getPath(), 1);
-            mPhotoView.setImageBitmap(bitmap);
-        }
     }
 }

@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract.Contacts;
@@ -55,7 +54,7 @@ public class CrimeFragment extends Fragment {
     private EditText mTitleField;
     private ImageView mPhotoView;
     private ImageButton mPhotoButton;
-    private OnCrimeChangedListener mCrimeChangedCallback;
+    private Callbacks mCrimeChangedCallback;
 
     public CrimeFragment() {
     }
@@ -69,23 +68,32 @@ public class CrimeFragment extends Fragment {
         return cf;
     }
 
+    interface Callbacks {
+        void onCrimeChanged(UUID crimeId);
+        void onCrimeRemoved(UUID crimeId);
+    }
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
 
         try {
-            mCrimeChangedCallback = (OnCrimeChangedListener) context;
+            mCrimeChangedCallback = (Callbacks) context;
         } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString() + "must implement OnCrimeChangedListener");
+            throw new ClassCastException(context.toString() + "must implement Callbacks");
         }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mCrimeChangedCallback = null;
     }
 
     @Override
     public void onPause() {
         super.onPause();
-
-        CrimeLab.get(getActivity())
-                .updateCrime(mCrime);
+        updateCrime();
     }
 
     @Override
@@ -159,28 +167,23 @@ public class CrimeFragment extends Fragment {
         }
 
         updateWidgetContent();
-        registerChange();
+        updateCrime();
     }
 
     private void updateWidgetContent(){
         mDateButton.setText(mCrime.getFormattedDate());
         mTimeButton.setText(mCrime.getFormattedTime());
-
-        if (mCrime.getSuspect() != null) {
-            mChooseSuspect.setText(mCrime.getSuspect());
-        }
-
-        if (mPhotoFile == null || !mPhotoFile.exists()) {
-            mPhotoView.setImageDrawable(null);
-        } else {
-            Bitmap bitmap = PictureUtils.getScaledBitmap(mPhotoFile.getPath(),
-                                                         getActivity());
-            mPhotoView.setImageBitmap(bitmap);
-        }
     }
 
-    private void registerChange() {
+    private void updateCrime() {
+        CrimeLab.get(getActivity()).updateCrime(mCrime);
         mCrimeChangedCallback.onCrimeChanged(mCrime.getId());
+    }
+
+    private void removeCrime(){
+        UUID crimeId = mCrime.getId();
+        CrimeLab.get(getActivity()).removeCrime(mCrime);
+        mCrimeChangedCallback.onCrimeRemoved(crimeId);
     }
 
     private void configureWidgets() {
@@ -215,11 +218,10 @@ public class CrimeFragment extends Fragment {
                 transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
                 transaction.add(android.R.id.content, photoViewer)
                     .addToBackStack(null).commit();
-
-//                photoViewer.setTargetFragment(CrimeFragment.this, REQUEST_PHOTO_VIEW);
-//                photoViewer.show(fm, DIALOG_PHOTO_VIEW);
             }
         });
+        PictureUtils.attachScaledBitmapToView(mPhotoView, mPhotoFile);
+
 
 
         mTitleField.setText(mCrime.getTitle());
@@ -231,7 +233,7 @@ public class CrimeFragment extends Fragment {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 mCrime.setTitle(s.toString());
-                registerChange();
+                updateCrime();
             }
 
             @Override
@@ -287,19 +289,12 @@ public class CrimeFragment extends Fragment {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 mCrime.setSolved(isChecked);
-                registerChange();
+                updateCrime();
             }
         });
 
 
         updateWidgetContent();
-    }
-
-    private void removeCrime(){
-        UUID crimeId = mCrime.getId();
-        CrimeLab.get(getActivity()).removeCrime(mCrime);
-        mCrimeChangedCallback.onCrimeRemoved(crimeId);
-        getActivity().onBackPressed();
     }
 
     private String getCrimeReport() {
@@ -316,10 +311,5 @@ public class CrimeFragment extends Fragment {
                           solvedString,
                           suspect);
 
-    }
-
-    interface OnCrimeChangedListener {
-        void onCrimeChanged(UUID crimeId);
-        void onCrimeRemoved(UUID crimeId);
     }
 }

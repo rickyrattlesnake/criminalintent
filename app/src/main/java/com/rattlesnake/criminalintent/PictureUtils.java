@@ -1,11 +1,12 @@
 package com.rattlesnake.criminalintent;
 
-
-import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
-import android.graphics.Point;
+import android.view.ViewTreeObserver;
+import android.widget.ImageView;
+
+import java.io.File;
 
 public class PictureUtils {
     public static Bitmap getScaledBitmap(String path, int destWidth, int destHeight) {
@@ -35,11 +36,24 @@ public class PictureUtils {
         return rotateBitmap(BitmapFactory.decodeFile(path, opts));
     }
 
-    public static Bitmap getScaledBitmap(String path, Activity activity) {
-        Point size = new Point();
-        activity.getWindowManager().getDefaultDisplay()
-            .getSize(size);
-        return getScaledBitmap(path, size.x, size.y);
+    public static void attachScaledBitmapToView(final ImageView imgView, final File imgFile) {
+        imgView.getViewTreeObserver().addOnGlobalLayoutListener(
+            new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    if (imgFile == null || !imgFile.exists()) {
+                        imgView.setImageDrawable(null);
+                    } else {
+                        int height = imgView.getHeight();
+                        int width = imgView.getWidth();
+                        Bitmap bitmap = PictureUtils.getScaledBitmap(imgFile.getPath(),
+                                                                     width,
+                                                                     height);
+                        imgView.setImageBitmap(bitmap);
+                    }
+
+                }
+            });
     }
 
     private static Bitmap rotateBitmap(Bitmap bm) {
